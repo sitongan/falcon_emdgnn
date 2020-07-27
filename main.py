@@ -13,7 +13,7 @@ import numpy as np
 from torch_geometric.data import DataLoader
 from torch_geometric.data import Data
 from dataset import  FalconDataset
-
+import os
 
 from edgenet import EdgeNet
 
@@ -108,7 +108,8 @@ def main():
 
     torch.manual_seed(args.seed)
 
-    device = torch.device('cuda:0')
+#    os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+    device = torch.device('cuda:3')
 
     kwargs = {'num_workers': 1, 'pin_memory': True} 
     dataset = FalconDataset('')
@@ -119,7 +120,10 @@ def main():
 
     model = EdgeNet().to(device)
     if args.load_model is not None:
-        model.load_state_dict(torch.load(args.load_model))
+        checkpoint = torch.load(args.load_model, map_location='cpu')
+        model.load_state_dict(checkpoint)
+        del checkpoint
+        torch.cuda.empty_cache()
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
