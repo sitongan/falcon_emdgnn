@@ -25,13 +25,16 @@ def preprocess_emd(torch_batch):
     batch_size = torch_batch.batch[-1] + 1
     ret = []
     for batch_idx in range(batch_size):
-        ret.append(torch_batch.x[torch_batch.batch == batch_idx].cpu().detach().numpy())
+        ret.append(torch_batch.x[torch_batch.batch == batch_idx][:,:3].cpu().detach().numpy())
     return ret
 
 def train(args, model, device, train_loader, optimizer, epoch, batch_size):
     model.train()
     batch_loss = []
     for batch_idx, (data_h) in enumerate(train_loader):
+        nodes_list = preprocess_emd(data_h)
+        target = torch.from_numpy(ef.emd.emds(nodes_list, R=1.0)).float().to(device)
+        
         data = data_h.to(device)
         optimizer.zero_grad()
         output = model(data)
@@ -40,9 +43,8 @@ def train(args, model, device, train_loader, optimizer, epoch, batch_size):
         #    pixel_list = preprocess(data_h)
         #    target_emds[batch_idx] = torch.from_numpy(ef.emd.emds(pixel_list, R=40.0)).float().to(device)
         #target = target_emds[batch_idx]
-        nodes_list = preprocess_emd(data_h)
-        target = torch.from_numpy(ef.emd.emds(nodes_list, R=1.0)).float().to(device)
-        output_dist = torch.cdist(output, output, p=2.1)
+
+        output_dist = torch.cdist(output, output, p=2.0)
         
         loss = F.mse_loss(output_dist, target)
         loss.backward()
@@ -87,10 +89,12 @@ def test(model, device, test_loader):
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description='Falcon EMD')
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
-                        help='input batch size for training (default: 64)')
+    parser.add_argument('--batch-size', type=int, default=32, metavar='N',
+                        help='input batch size for training (default: 32)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
+    parser.add_argument('--train-size', type=int, default=1000000, metavar='',
+                        help='train data size for small prototyping')
     parser.add_argument('--epochs', type=int, default=14, metavar='N',
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
@@ -113,6 +117,7 @@ def main():
 
     kwargs = {'num_workers': 1, 'pin_memory': True} 
     dataset = FalconDataset('')
+    dataset = dataset[:args.train_size]
     print('training on {} events'.format(dataset.len()))
     
     train_loader = DataLoader(dataset,
