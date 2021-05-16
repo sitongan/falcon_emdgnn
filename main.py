@@ -113,7 +113,7 @@ def main():
     torch.manual_seed(args.seed)
 
 #    os.environ["CUDA_VISIBLE_DEVICES"] = "3"
-    device = torch.device('cuda:3')
+    device = torch.device('cuda:2')
 
     kwargs = {'num_workers': 1, 'pin_memory': True} 
     dataset = FalconDataset('')
