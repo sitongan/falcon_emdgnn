@@ -11,7 +11,7 @@ import torch_geometric.transforms as T
 from torch_geometric.nn import EdgeConv, global_mean_pool
 
 class EdgeNet(nn.Module):
-    def __init__(self, input_dim=4, hidden_dim=8, output_dim=1, n_iters=10, aggr='add'):
+    def __init__(self, input_dim=4, hidden_dim=32, output_dim=1, n_iters=10, aggr='add'):
         super(EdgeNet, self).__init__()
         convnn = nn.Sequential(nn.Linear(2*(hidden_dim + input_dim), hidden_dim),
                                nn.Sigmoid(),
@@ -29,7 +29,7 @@ class EdgeNet(nn.Module):
         
         self.nodenetwork = EdgeConv(nn=convnn,aggr=aggr)
         
-        self.outputnetwork = nn.Sequential(nn.Linear( input_dim + hidden_dim, 8))
+        self.outputnetwork = nn.Sequential(nn.Linear( input_dim + hidden_dim, 16))
 
     def forward(self, data):
         X = data.x
