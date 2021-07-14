@@ -46,13 +46,13 @@ def train(args, model, device, train_loader, optimizer, epoch, batch_size):
 
         output_dist = torch.cdist(output, output, p=2.0)
         
-        loss = F.mse_loss(output_dist, target)
+        loss = F.l1_loss(output_dist, target)
         loss.backward()
         optimizer.step()
         batch_loss.append(loss.item())
-        
+
 #        print(output)
-        
+
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * batch_size, len(train_loader.dataset),
@@ -113,7 +113,7 @@ def main():
     torch.manual_seed(args.seed)
 
 #    os.environ["CUDA_VISIBLE_DEVICES"] = "3"
-    device = torch.device('cuda:3')
+    device = torch.device('cuda:2')
 
     kwargs = {'num_workers': 1, 'pin_memory': True} 
     dataset = FalconDataset('')
